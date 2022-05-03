@@ -8,6 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.keys import Keys
+import os
 import time
 from ddt import ddt, data, unpack
 
@@ -24,7 +25,7 @@ def get_data(file_name):
 class PROFILE(unittest.TestCase):
   def setUp(self):
     self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-    self.timeout = 60
+    self.timeout = 10
     # self.driver.get('https://tinhte.vn/login/')
     self.driver.get('https://tinhte.vn/')
 
@@ -47,28 +48,159 @@ class PROFILE(unittest.TestCase):
 
     txt_passwd.send_keys(Keys.RETURN)
 
-    
-
-  # get test data from specified excle spreadsheet by using the get_data funcion
-  @data(*get_data('./TextData.xls'))
-  @unpack
-  def test_text_comment(self, input_value, expected_result):
-    self.driver.get('https://vn-z.vn/threads/bai-test-dau-tien-giua-i5-12400f-va-ryzen-5-5600x-i5-khoe-hon-nhung-re-hon-nhieu.44220/')
-
-    WebDriverWait(self.driver,self.timeout).until(
-
-      EC.presence_of_element_located((By.CSS_SELECTOR,".fr-element.fr-view p"))
+    WebDriverWait(self.driver, self.timeout).until(
+      EC.presence_of_element_located((By.CSS_SELECTOR, "div.main-page"))
     )
-    txt_cmt=self.driver.find_element(By.CSS_SELECTOR,".fr-element.fr-view p")
-    txt_cmt.send_keys(input_value)
 
-    btn_reply = self.driver.find_element(By.CLASS_NAME, 'button--icon--reply')
-    btn_reply.click()
+  @data(*get_data('./profile/UpdateProfileSuccess.xls'))
+  @unpack
+  def test_update_profile_success(self, gender, address, profession, phone, idcard, homepage, avatar):
+    self.driver.get('https://tinhte.vn/account/personal-details')
+    WebDriverWait(self.driver, self.timeout).until(
+      EC.presence_of_element_located((By.CSS_SELECTOR, "form.personalDetailsForm"))
+    )
 
-    time.sleep(2)
-    cmt=self.driver.find_element(By.CSS_SELECTOR,"article[data-author='minhhoang0411']:last-child article .bbWrapper")
+    if gender != 'NOVALUE':
+      radio_button = self.driver.find_element(By.XPATH, f"//input[@name='gender' and @value='{gender}']")
+      radio_button.click()
 
-    self.assertEqual(expected_result, cmt.text)
+    if address != 'NOVALUE':
+      address_input = self.driver.find_element(By.XPATH, "//input[@name='location']")
+      address_input.clear()
+      time.sleep(0.5)
+      address_input.send_keys(address)
+
+    if profession != 'NOVALUE':
+      profession_input = self.driver.find_element(By.XPATH, "//input[@name='occupation']")
+      profession_input.clear()
+      time.sleep(0.5)
+      profession_input.send_keys(profession)
+
+    if phone != 'NOVALUE':
+      phone_input = self.driver.find_element(By.XPATH, "//input[@id='ctrl_custom_field_citizenPhoneNumber']")
+      phone_input.clear()
+      time.sleep(1)
+      phone_input.send_keys(str(phone))
+
+    if idcard != 'NOVALUE':
+      idcard_input = self.driver.find_element(By.XPATH, "//input[@id='ctrl_custom_field_citizenId']")
+      idcard_input.clear()
+      time.sleep(0.5)
+      idcard_input.send_keys(idcard)
+
+    if homepage != 'NOVALUE':
+      homepage_input = self.driver.find_element(By.XPATH, "//input[@name='homepage']")
+      homepage_input.clear()
+      time.sleep(0.5)
+      homepage_input.send_keys(homepage)
+
+    if avatar != 'NOVALUE':
+      self.driver.find_element(By.XPATH, "//a[@href='account/avatar']/span").click()
+      WebDriverWait(self.driver, self.timeout).until(
+        EC.presence_of_element_located((By.XPATH, "//input[@name='avatar']"))
+      )
+      self.driver.find_element(By.XPATH, "//input[@name='avatar']").send_keys(os.getcwd() + "/profile/" + avatar)
+      time.sleep(2)
+      self.driver.find_element(By.XPATH, "//input[@id='ctrl_save']").click()
+
+    time.sleep(1)
+
+    submit_button = self.driver.find_element(By.CSS_SELECTOR, "form.personalDetailsForm input[type='submit']")
+    submit_button.click()
+
+    self.driver.get('https://tinhte.vn/account/personal-details')
+
+    WebDriverWait(self.driver, self.timeout).until(
+      EC.presence_of_element_located((By.CSS_SELECTOR, "form.personalDetailsForm"))
+    )
+    time.sleep(1)
+
+    if gender != 'NOVALUE':
+      radio_button = self.driver.find_element(By.XPATH, f"//input[@name='gender' and @value='{gender}']")
+      # assert radio_button.get_attribute("checked")
+
+    if address != 'NOVALUE':
+      address_input = self.driver.find_element(By.XPATH, "//input[@name='location']")
+      assert address_input.get_attribute('value') == address
+
+    if profession != 'NOVALUE':
+      profession_input = self.driver.find_element(By.XPATH, "//input[@name='occupation']")
+      assert profession_input.get_attribute('value') == profession
+
+    if phone != 'NOVALUE':
+      phone_input = self.driver.find_element(By.XPATH, "//input[@id='ctrl_custom_field_citizenPhoneNumber']")
+      assert str(phone_input.get_attribute('value')) == str(phone)
+    
+    if idcard != 'NOVALUE':
+      idcard_input = self.driver.find_element(By.XPATH, "//input[@id='ctrl_custom_field_citizenId']")
+      assert idcard_input.get_attribute('value') == idcard
+
+    if homepage != 'NOVALUE':
+      homepage_input = self.driver.find_element(By.XPATH, "//input[@name='homepage']")
+      assert homepage_input.get_attribute('value') == homepage
+    
+  @data(*get_data('./profile/UpdateProfileFail.xls'))
+  @unpack
+  def test_update_profile_fail(self, phone, homepage):
+    self.driver.get('https://tinhte.vn/account/personal-details')
+    WebDriverWait(self.driver, self.timeout).until(
+      EC.presence_of_element_located((By.CSS_SELECTOR, "form.personalDetailsForm"))
+    )
+
+    if phone != 'NOVALUE':
+      phone_input = self.driver.find_element(By.XPATH, "//input[@id='ctrl_custom_field_citizenPhoneNumber']")
+      prev_phone = phone_input.get_attribute('value')
+      phone_input.clear()
+      time.sleep(1)
+      phone_input.send_keys(str(phone))
+
+    if homepage != 'NOVALUE':
+      homepage_input = self.driver.find_element(By.XPATH, "//input[@name='homepage']")
+      prev_homepage = homepage_input.get_attribute('value')
+      homepage_input.clear()
+      time.sleep(0.5)
+      homepage_input.send_keys(homepage)
+
+    time.sleep(1)
+
+    submit_button = self.driver.find_element(By.CSS_SELECTOR, "form.personalDetailsForm input[type='submit']")
+    submit_button.click()
+
+    self.driver.get('https://tinhte.vn/account/personal-details')
+
+    WebDriverWait(self.driver, self.timeout).until(
+      EC.presence_of_element_located((By.CSS_SELECTOR, "form.personalDetailsForm"))
+    )
+    time.sleep(1)
+
+    if phone != 'NOVALUE':
+      phone_input = self.driver.find_element(By.XPATH, "//input[@id='ctrl_custom_field_citizenPhoneNumber']")
+      assert str(phone_input.get_attribute('value')) == str(prev_phone)
+
+    if homepage != 'NOVALUE':
+      homepage_input = self.driver.find_element(By.XPATH, "//input[@name='homepage']")
+      assert homepage_input.get_attribute('value') == prev_homepage
+
+  @data(*get_data('./profile/UpdateAvatarFail.xls'))
+  @unpack
+  def test_update_avatar_fail(self, avatar, output):
+    self.driver.get('https://tinhte.vn/account/personal-details')
+    WebDriverWait(self.driver, self.timeout).until(
+      EC.presence_of_element_located((By.CSS_SELECTOR, "form.personalDetailsForm"))
+    )
+
+    if avatar != 'NOVALUE':
+      self.driver.find_element(By.XPATH, "//a[@href='account/avatar']/span").click()
+      WebDriverWait(self.driver, self.timeout).until(
+        EC.presence_of_element_located((By.XPATH, "//input[@name='avatar']"))
+      )
+      self.driver.find_element(By.XPATH, "//input[@name='avatar']").send_keys(os.getcwd() + "/profile/" + avatar)
+      time.sleep(1)
+
+    assert output in self.driver.page_source
+
+
+  
 
   def tearDown(self):
     self.driver.quit()
