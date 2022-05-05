@@ -67,13 +67,13 @@ class PASSWORD(unittest.TestCase):
     curr_field.clear()
     curr_field.send_keys(currentPassword)
     
-    curr_field = self.driver.find_element(By.XPATH, f"//input[@name='password']")
-    curr_field.clear()
-    curr_field.send_keys(newPassword)
+    pass_field = self.driver.find_element(By.XPATH, f"//input[@name='password']")
+    pass_field.clear()
+    pass_field.send_keys(newPassword)
     
-    curr_field = self.driver.find_element(By.XPATH, f"//input[@name='password_confirm']")
-    curr_field.clear()
-    curr_field.send_keys(confirmPassword)
+    conf_field = self.driver.find_element(By.XPATH, f"//input[@name='password_confirm']")
+    conf_field.clear()
+    conf_field.send_keys(confirmPassword)
 
     submit_button = self.driver.find_element(By.CSS_SELECTOR, "form.ContactDetailsForm input[type='submit']")
     time.sleep(0.5)
