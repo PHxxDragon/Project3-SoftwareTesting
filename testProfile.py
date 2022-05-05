@@ -27,18 +27,12 @@ class PROFILE(unittest.TestCase):
     self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
     self.timeout = 10
     # self.driver.get('https://tinhte.vn/login/')
-    self.driver.get('https://tinhte.vn/')
+    self.driver.get('https://tinhte.vn/login/')
 
     # Đăng nhập
-
-    self.driver.find_element(By.CSS_SELECTOR, 'button').click()
-
-    link_SignIn = self.driver.find_element(By.CSS_SELECTOR, "a[href='https://tinhte.vn/login/']")
-    link_SignIn.click()
-    
-    WebDriverWait(self.driver,self.timeout).until(
-      EC.presence_of_element_located((By.CSS_SELECTOR, '#ctrl_pageLogin_login2'))
-    )
+    # WebDriverWait(self.driver,self.timeout).until(
+    #   EC.presence_of_element_located((By.CSS_SELECTOR, '#ctrl_pageLogin_login2'))
+    # )
 
     txt_email = self.driver.find_element(By.CSS_SELECTOR, '#ctrl_pageLogin_login2')
     txt_email.send_keys("bugbugphapha@gmail.com")
